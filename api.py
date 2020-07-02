@@ -9,6 +9,7 @@ import json
 def __init__():
     global logger
     logger =  logging.getLogger("kc-pep."+__name__)
+    logging.basicConfig(level=logging.DEBUG)
 
 __init__()
 
@@ -66,6 +67,11 @@ def access():
                 response["message"] = "Bad request"
                 response["status_code"] = r_authorise.status_code
                 response["data"].append('Keycloak returned error: {}'.format(r_authorise.text))
+        else:
+            logger.info("Bad request => {0}".format(r_authenticate.text))
+            response["message"] = "Bad request"
+            response["status_code"] = r_authenticate.status_code
+            response["data"].append('Keycloak returned error: {}'.format(r_authenticate.text))
         return jsonify(response)
     except Exception as error:
         logger.error(error)
