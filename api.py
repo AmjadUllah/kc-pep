@@ -1,10 +1,13 @@
 from flask import request, url_for, Flask, jsonify, flash
-from parameters import keycloak_server, keycloak_realm, client_id, client_secret
+from parameters import keycloak_server, keycloak_realm, client_id, client_secret, ssl_mode
 import os
+import os.path
 import requests
 app = Flask(__name__)
 import logging
 import json
+import sys
+import ssl
 
 def __init__():
     global logger
@@ -87,4 +90,20 @@ def status():
 
 if __name__ == "__main__":
     __init__()
-    app.run(host="0.0.0.0",debug=True, port=5000)
+    logger.info("kc-pep operational ssl_mode is => {0}".format(ssl_mode))
+    if int(ssl_mode) == 1 or int(ssl_mode) == 2:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        if os.path.exists('certs/server.crt') == False or os.path.exists('certs/server.key') == False:
+            logger.error("Certificates files are missing")
+            sys.exit()
+        if int(ssl_mode) == 2:
+            if os.path.exists('certs/ca.crt') == False:
+                logger.error("CA certificate file is missing")
+                sys.exit()
+            else:
+                context.verify_mode = ssl.CERT_REQUIRED
+                context.load_verify_locations("certs/ca.crt")
+        context.load_cert_chain("certs/server.crt", "certs/server.key")
+        app.run(host="0.0.0.0",debug=True, port=5000, ssl_context=context)
+    else:
+        app.run(host="0.0.0.0",debug=True, port=5000)
