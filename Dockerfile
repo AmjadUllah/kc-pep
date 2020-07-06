@@ -9,4 +9,5 @@ RUN pip3 install -r requirements.txt \
 
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PYTHONPATH=/var/lib/pep FLASK_APP=api.py
 
-ENTRYPOINT ["flask", "run", "--host=0.0.0.0"]
+# ENTRYPOINT ["flask", "run", "--host=0.0.0.0"]
+ENTRYPOINT python3 api.py
