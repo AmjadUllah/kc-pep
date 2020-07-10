@@ -82,6 +82,32 @@ def access():
         response["status_code"]= 422
         return jsonify(response)
 
+@app.route('/test', methods=['POST'])
+def test():
+    """ Post test API
+    """
+    response = dict(status_code="", message="", data=[])
+    try:
+        #logger.debug("Test post request received.")
+
+        # Fetch input data
+        input_json_body = request.json
+        user_id = input_json_body ['user_id']
+        user_pwd = input_json_body ['pwd']
+        device_id = input_json_body ['device_id']
+        access_scope = input_json_body ['scope']
+        logger.info("Test post request received \
+            \n\tUserID => {0} \n\tPwd => {1} \n\tDeviceID => {2} \n\tScope => {3}" \
+                .format(user_id,user_pwd,device_id,access_scope))
+        response["message"] = "Success"
+        response["status_code"] = 200
+        return jsonify(response)
+    except Exception as error:
+        logger.error(error)
+        response["message"]= "Invalid request: {}".format(error)
+        response["status_code"]= 422
+        return jsonify(response)
+
 @app.route('/status', methods=['GET'])
 def status():
     """ API function to get the service status"""
