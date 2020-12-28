@@ -164,7 +164,7 @@ def record_stat(start_time):
     if save_stats == True:
         end_time = time.time()
         elapsed = end_time - start_time
-        row = "\n" + start_time + "," + end_time + "," + elapsed
+        row = "\n" + str(start_time) + "," + str(end_time) + "," + str(elapsed)
         f = open("results.csv", "a")
         f.write(row)
         f.close()
@@ -220,11 +220,13 @@ def access():
             response["message"] = "Bad request"
             response["status_code"] = r_authenticate.status_code
             response["data"].append('Keycloak returned error: {}'.format(r_authenticate.text))
+        record_stat(start_time)
         return jsonify(response)
     except Exception as error:
         logger.error(error)
         response["message"]= "Invalid request: {}".format(error)
         response["status_code"]= 422
+        record_stat(start_time)
         return jsonify(response)
 
 @app.route('/test', methods=['POST'])
@@ -246,7 +248,6 @@ def test():
                 .format(user_id,user_pwd,device_id,access_scope))
         response["message"] = "Success"
         response["status_code"] = 200
-        record_stat(start_time)
         return jsonify(response)
     except Exception as error:
         logger.error(error)
@@ -263,7 +264,7 @@ def status():
 
 if __name__ == "__main__":
     __init__()
-    logger.info("kc-pep started with: \nOperational ssl_mode is => {0} \n Save stats => {1}".format(ssl_mode,save_stats))
+    logger.info("kc-pep started with: \nOperational ssl_mode is => {0} \nSave stats => {1}".format(ssl_mode,save_stats))
     if save_stats == True:
         f = open("results.csv", "w")
         f.write("start_time,end_time,proc_time")
