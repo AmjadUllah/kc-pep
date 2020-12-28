@@ -1,6 +1,6 @@
 from flask import request, url_for, Flask, jsonify, flash
 import parameters
-from parameters import keycloak_server, keycloak_realm, client_id, client_secret, ssl_mode, admin_id, admin_pwd
+from parameters import keycloak_server, keycloak_realm, client_id, client_secret, ssl_mode, admin_id, admin_pwd, save_stats
 import os
 import os.path
 import requests
@@ -13,6 +13,7 @@ import ssl
 import io 
 import csv
 from flask import make_response
+import time
 
 def __init__():
     global logger
@@ -159,6 +160,15 @@ def assign_role_to_user(access_token,user_id,role_id,role_name):   # assign role
         logger.error(e)
         raise e
 
+def record_stat(start_time):
+    if save_stats == True:
+        end_time = time.time()
+        elapsed = end_time - start_time
+        row = "\n" + start_time + "," + end_time + "," + elapsed
+        f = open("results.csv", "a")
+        f.write(row)
+        f.close()
+        
 @app.route('/access', methods=['POST'])
 def access():
     """ API to get access to a particular device a application
@@ -167,6 +177,7 @@ def access():
         :params device: dictionary with device information.
         :type input: dictionary
     """
+    start_time = time.time()
     response = dict(status_code="", message="", data=[])
     try:
         logger.debug("User access request received.")
@@ -235,11 +246,13 @@ def test():
                 .format(user_id,user_pwd,device_id,access_scope))
         response["message"] = "Success"
         response["status_code"] = 200
+        record_stat(start_time)
         return jsonify(response)
     except Exception as error:
         logger.error(error)
         response["message"]= "Invalid request: {}".format(error)
         response["status_code"]= 422
+        record_stat(start_time)
         return jsonify(response)
 
 @app.route('/status', methods=['GET'])
@@ -250,7 +263,12 @@ def status():
 
 if __name__ == "__main__":
     __init__()
-    logger.info("kc-pep operational ssl_mode is => {0}".format(ssl_mode))
+    logger.info("kc-pep started with: \nOperational ssl_mode is => {0} \n Save stats => {1}".format(ssl_mode,save_stats))
+    if save_stats == True:
+        f = open("results.csv", "w")
+        f.write("start_time,end_time,proc_time")
+        f.close()
+
     if int(ssl_mode) == 1 or int(ssl_mode) == 2:
         context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         if os.path.exists('certs/server.crt') == False or os.path.exists('certs/server.key') == False:
